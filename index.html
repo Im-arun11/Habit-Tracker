@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>One Day at a Time — 30-day tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #171717;
+      background: #f7f7f5;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --ink: #171717;
+      --muted: #898985;
+      --line: #e6e6e2;
+      --paper: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 48px 20px;
+    }
+
+    button, input { font: inherit; }
+
+    .tracker {
+      width: min(100%, 520px);
+      padding: 42px 44px 30px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 18px 55px rgb(0 0 0 / 3%);
+    }
+
+    .welcome {
+      width: min(100%, 520px);
+      padding: 42px 44px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 18px 55px rgb(0 0 0 / 3%);
+    }
+
+    .welcome[hidden], .tracker[hidden], #reset[hidden] { display: none; }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .brand { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+    .brand-mark { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+
+    .header-actions { display: flex; align-items: center; gap: 14px; }
+
+    .change-goal {
+      padding: 0;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: none;
+      cursor: pointer;
+    }
+
+    .change-goal:hover { color: var(--ink); }
+
+    .goal-options { display: grid; gap: 12px; margin-top: 28px; }
+
+    .goal-option {
+      min-height: 88px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7px;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: var(--paper);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+
+    .goal-option:hover, .goal-option:focus-visible {
+      border-color: var(--ink);
+      background: #fafaf8;
+    }
+
+    .goal-option:focus-visible, .change-goal:focus-visible { outline: 2px solid #777; outline-offset: 3px; }
+    .goal-option strong { font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 400; }
+    .goal-option span, .welcome-copy { color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+    .welcome .intro { padding: 38px 0 0; }
+    .intro { padding: 28px 0 26px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 8vw, 46px);
+      font-weight: 400;
+      letter-spacing: -.055em;
+      line-height: 1.08;
+    }
+
+    .habit-input {
+      width: 100%;
+      margin-top: 17px;
+      padding: 0 0 8px;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      border-radius: 0;
+      outline: 0;
+      color: #555550;
+      font-size: 14px;
+      background: transparent;
+      transition: border-color .2s;
+    }
+
+    .habit-input:hover, .habit-input:focus { border-color: var(--line); }
+    .habit-input::placeholder { color: #aaa; font-family: inherit; font-size: 14px; }
+    .habit-input.has-value {
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+    }
+
+    .progress-block {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 24px 0 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .day-count { display: flex; align-items: baseline; gap: 6px; }
+    .day-count strong {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 40px;
+      font-weight: 400;
+      letter-spacing: -.06em;
+      line-height: 1;
+    }
+    .day-count span, .completion { color: var(--muted); font-size: 12px; }
+    .completion { text-align: right; line-height: 1.6; }
+
+    .challenge-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 22px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .challenge-controls input[type="number"] {
+      width: 100px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      color: var(--ink);
+      background: var(--paper);
+      font-size: 11px;
+      text-align: right;
+    }
+    .challenge-controls input[type="number"]:focus-visible { outline: 2px solid #777; outline-offset: 2px; }
+
+    .grid-label {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0 16px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .dots {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      justify-items: center;
+      gap: 17px 8px;
+      padding: 5px 0 30px;
+    }
+
+    .dot {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid #deded9;
+      border-radius: 50%;
+      color: #8c8c86;
+      background: transparent;
+      font-size: 9px;
+      cursor: pointer;
+      transition: background .18s, color .18s, border-color .18s, transform .18s;
+    }
+
+    .dot:hover:not(:disabled) { transform: scale(1.12); border-color: var(--ink); }
+    .dot.done { border-color: var(--ink); color: var(--paper); background: var(--ink); }
+    .dot.today { outline: 1px solid var(--ink); outline-offset: 3px; }
+    .dot:disabled { cursor: default; opacity: .38; }
+    .dot:focus-visible, .checkin:focus-visible, .reset:focus-visible {
+      outline: 2px solid #777;
+      outline-offset: 3px;
+    }
+
+    .checkin {
+      width: 100%;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid var(--ink);
+      color: var(--paper);
+      background: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .checkin:hover { color: var(--ink); background: var(--paper); }
+    .checkin.is-done { color: var(--ink); background: var(--paper); }
+    .checkin:disabled { cursor: default; opacity: .55; }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .reset {
+      position: fixed;
+      z-index: 1;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      color: var(--muted);
+      background: var(--paper);
+      box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
+      cursor: pointer;
+    }
+    .reset:hover, .reset:focus-visible { color: var(--ink); }
+    .reset::after {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      padding: 7px 9px;
+      border-radius: 3px;
+      color: var(--paper);
+      background: var(--ink);
+      content: attr(data-tooltip);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0;
+      opacity: 0;
+      pointer-events: none;
+      text-transform: none;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .reset:hover::after, .reset:focus-visible::after { opacity: 1; }
+
+    @media (max-width: 440px) {
+      body { padding: 20px 12px; }
+      .tracker { padding: 30px 22px 24px; }
+      .dots { gap: 15px 4px; }
+      .dot { width: 25px; height: 25px; font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <button class="reset" id="reset" type="button" aria-label="Reset progress" data-tooltip="Reset progress" hidden>
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"></path>
+      <path d="M3 3v5h5"></path>
+    </svg>
+  </button>
+  <main class="welcome" id="welcome" aria-labelledby="welcome-title">
+    <header class="topline">
+      <span class="brand"><span class="brand-mark" aria-hidden="true"></span> One day at a time</span>
+      <span>Choose your goal</span>
+    </header>
+    <section class="intro">
+      <p class="eyebrow">A fresh start</p>
+      <h1 id="welcome-title">What would you like to do?</h1>
+      <p class="welcome-copy">Choose a goal to begin your daily journey.</p>
+      <div class="goal-options">
+        <button class="goal-option" id="choose-build" type="button">
+          <strong>Build a habit</strong>
+          <span>Create a routine and celebrate each day you complete it.</span>
+        </button>
+        <button class="goal-option" id="choose-quit" type="button">
+          <strong>Quit a habit</strong>
+          <span>Track each day you stay away from a habit you want to stop.</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <main class="tracker" id="tracker" aria-labelledby="title" hidden>
+    <header class="topline">
+      <span class="brand"><span class="brand-mark" aria-hidden="true"></span> One day at a time</span>
+      <div class="header-actions">
+        <span id="practice-label">30-day challenge</span>
+        <button class="change-goal" id="change-goal" type="button">Choose another goal</button>
+      </div>
+    </header>
+
+    <section class="intro">
+      <p class="eyebrow">One day at a time</p>
+      <h1 id="title">Build a habit.</h1>
+      <input id="habit" class="habit-input" type="text" maxlength="60" aria-label="Your habit"
+        placeholder="What habit are you building?" autocomplete="off">
+    </section>
+
+    <section aria-label="Challenge progress">
+      <div class="progress-block">
+        <div>
+          <p class="eyebrow">Your journey</p>
+          <div class="day-count"><strong id="day-number">01</strong><span id="day-total">/ 30 days</span></div>
+        </div>
+        <div class="completion" id="completion" aria-live="polite">0 of 30 days<br>completed</div>
+      </div>
+      <div class="challenge-controls">
+        <label for="duration-input">Challenge length (days)</label>
+        <input id="duration-input" type="number" min="1" max="10000" step="1" value="30"
+          aria-label="Challenge length in days" required>
+      </div>
+      <div class="grid-label"><span>One dot for each day</span><span id="date-label"></span></div>
+      <div class="dots" id="dots" aria-label="Daily check-ins"></div>
+    </section>
+
+    <button class="checkin" id="checkin" type="button">
+      <span id="check-icon" aria-hidden="true">+</span><span id="check-label">Mark today complete</span>
+    </button>
+
+    <footer class="footer">
+      <span id="saved-label">Saved on this device</span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "one-day-tracker-v1";
+      const today = new Date();
+      const localDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      const parseDate = (value) => {
+        const [year, month, day] = value.split("-").map(Number);
+        return new Date(year, month - 1, day);
+      };
+      const dayDifference = (start, end) => Math.floor(
+        (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) -
+          Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000
+      );
+      const freshState = () => ({ startDate: localDate(today), habit: "", completed: [], challengeDays: 30 });
+      const freshTrackers = () => ({ build: freshState(), quit: freshState() });
+      const normalizeTracker = (stored) => stored && typeof stored.startDate === "string" &&
+        Array.isArray(stored.completed) ? {
+          ...stored,
+          challengeDays: Number.isInteger(stored.challengeDays) && stored.challengeDays >= 1 && stored.challengeDays <= 10000
+            ? stored.challengeDays
+            : 30
+        } : freshState();
+      let trackers;
+      let activeMode;
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (stored && stored.trackers) {
+          trackers = {
+            build: normalizeTracker(stored.trackers.build),
+            quit: normalizeTracker(stored.trackers.quit)
+          };
+          activeMode = stored.activeMode === "quit" ? "quit" : "build";
+        } else {
+          trackers = freshTrackers();
+          trackers.build = normalizeTracker(stored);
+          activeMode = "build";
+        }
+      } catch {
+        trackers = freshTrackers();
+        activeMode = "build";
+      }
+      let state = trackers[activeMode];
+
+      const habitInput = document.getElementById("habit");
+      const dotsElement = document.getElementById("dots");
+      const checkin = document.getElementById("checkin");
+      const durationInput = document.getElementById("duration-input");
+      const welcome = document.getElementById("welcome");
+      const tracker = document.getElementById("tracker");
+      const resetButton = document.getElementById("reset");
+      const goalButtons = {
+        build: document.getElementById("choose-build"),
+        quit: document.getElementById("choose-quit")
+      };
+      let start;
+      let elapsed;
+      let isFutureStart;
+
+      const updateDateContext = () => {
+        start = parseDate(state.startDate);
+        elapsed = dayDifference(start, today);
+        isFutureStart = elapsed < 0;
+      };
+      const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify({ activeMode, trackers }));
+      const updateModeContent = () => {
+        const isBuildMode = activeMode === "build";
+        document.getElementById("title").textContent = isBuildMode ? "Build a habit." : "Quit a habit.";
+        habitInput.setAttribute("aria-label", isBuildMode ? "Habit you are building" : "Habit you are quitting");
+        habitInput.placeholder = isBuildMode ? "What habit are you building?" : "What habit are you quitting?";
+      };
+      const render = () => {
+        const duration = state.challengeDays;
+        const currentDay = Math.max(1, Math.min(duration, elapsed + 1));
+        const finished = elapsed >= duration;
+        const done = new Set(state.completed);
+        const count = state.completed.filter((date) => {
+          const day = dayDifference(start, parseDate(date)) + 1;
+          return day >= 1 && day <= duration;
+        }).length;
+        document.getElementById("practice-label").textContent = `${duration}-day challenge`;
+        document.getElementById("day-number").textContent = String(currentDay).padStart(2, "0");
+        document.getElementById("day-total").textContent = `/ ${duration} days`;
+        document.getElementById("completion").innerHTML =
+          `${count} of ${duration} days<br>${activeMode === "build" ? "completed" : "on track"}`;
+        document.getElementById("date-label").textContent = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        durationInput.value = String(duration);
+        dotsElement.replaceChildren();
+
+        for (let day = 1; day <= duration; day += 1) {
+          const button = document.createElement("button");
+          const date = new Date(start);
+          date.setDate(start.getDate() + day - 1);
+          const dateString = localDate(date);
+          const isToday = dateString === localDate(today);
+          const isDone = done.has(dateString);
+          button.type = "button";
+          button.className = `dot${isDone ? " done" : ""}${isToday ? " today" : ""}`;
+          button.textContent = String(day);
+          const progressLabel = activeMode === "build" ? "completed" : "on track";
+          button.setAttribute("aria-label", `Day ${day}, ${date.toLocaleDateString()}${isDone ? `, ${progressLabel}` : ""}`);
+          button.setAttribute("aria-pressed", String(isDone));
+          button.disabled = day > currentDay || isFutureStart;
+          button.title = button.disabled ? `Day ${day} is in the future` : `Toggle day ${day}`;
+          button.addEventListener("click", () => {
+            state.completed = isDone
+              ? state.completed.filter((item) => item !== dateString)
+              : [...state.completed, dateString];
+            save();
+            render();
+          });
+          dotsElement.append(button);
+        }
+
+        const todayString = localDate(today);
+        const checkedToday = done.has(todayString);
+        const maxDurationReached = duration > 9970;
+        checkin.disabled = isFutureStart || (finished && maxDurationReached);
+        checkin.classList.toggle("is-done", checkedToday);
+        document.getElementById("check-icon").textContent = finished ? "+" : checkedToday ? "✓" : "+";
+        document.getElementById("check-label").textContent = finished
+          ? maxDurationReached ? "Maximum challenge length reached" : "Add 30 more days"
+          : checkedToday
+            ? activeMode === "build" ? "Today is complete — undo" : "Today is on track — undo"
+            : activeMode === "build" ? "Mark today complete" : "I avoided it today";
+      };
+
+      const showActiveTracker = () => {
+        welcome.hidden = true;
+        tracker.hidden = false;
+        resetButton.hidden = false;
+        updateDateContext();
+        updateModeContent();
+        habitInput.value = state.habit || "";
+        habitInput.classList.toggle("has-value", habitInput.value.trim().length > 0);
+        render();
+      };
+
+      const showWelcome = () => {
+        tracker.hidden = true;
+        welcome.hidden = false;
+        resetButton.hidden = true;
+      };
+
+      for (const [mode, button] of Object.entries(goalButtons)) {
+        button.addEventListener("click", () => {
+          activeMode = mode;
+          state = trackers[mode];
+          save();
+          showActiveTracker();
+        });
+      }
+
+      document.getElementById("change-goal").addEventListener("click", showWelcome);
+
+      habitInput.addEventListener("input", () => {
+        state.habit = habitInput.value;
+        habitInput.classList.toggle("has-value", habitInput.value.trim().length > 0);
+        save();
+      });
+
+      durationInput.addEventListener("change", () => {
+        if (!durationInput.reportValidity()) return;
+        state.challengeDays = durationInput.valueAsNumber;
+        save();
+        render();
+      });
+
+      checkin.addEventListener("click", () => {
+        if (elapsed >= state.challengeDays) {
+          if (state.challengeDays + 30 > 10000) return;
+          state.challengeDays += 30;
+          save();
+          render();
+          return;
+        }
+        const todayString = localDate(today);
+        state.completed = state.completed.includes(todayString)
+          ? state.completed.filter((item) => item !== todayString)
+          : [...state.completed, todayString];
+        save();
+        render();
+      });
+
+      document.getElementById("reset").addEventListener("click", () => {
+        trackers = freshTrackers();
+        state = trackers[activeMode];
+        save();
+        showActiveTracker();
+      });
+
+      showWelcome();
+    })();
+  </script>
+</body>
+</html>
